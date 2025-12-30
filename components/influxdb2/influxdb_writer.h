@@ -5,6 +5,7 @@
 #include "esphome/core/defines.h"
 #include "esphome/core/log.h"
 #include <vector>
+#include <list>
 
 #include "esphome/components/http_request/http_request.h"
 
