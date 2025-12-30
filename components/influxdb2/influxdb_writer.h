@@ -13,7 +13,7 @@ namespace influxdb {
 
 class InfluxDBWriter : public Component {
 public:
-  InfluxDBWriter(){};
+  InfluxDBWriter() : request_(nullptr) {};
   void setup() override;
   void loop() override;
   void dump_config() override;

@@ -14,6 +14,8 @@ Changes from Jepsson/esphome-influxdb to CalvinSchwartz/esphome-influxdb
 ## Installation and Usage
 Just add this repository as an External Component in your ESPHome yaml. Also, add a `influxdb2` section to your ESPHome configuration file to configure the client.
 
+**Note:** As of ESPHome 2025.5.2, you need to explicitly define an `http_request` component in your configuration.
+
 ### Example configuration
 
 ```yaml
@@ -21,12 +23,17 @@ external_components:
   - source: github://JeroenvdV/esphome-influxdb2
     components: [ influxdb2 ]
 
+# Required: Define http_request component
+http_request:
+  id: my_http_request
+
 influxdb2:
   host: "influxdb-host"
   orgid: "influx_org"
   token: "Token abcdef=="
   bucket: "influx_bucket"
   device: "tempsensor"
+  http_request_id: my_http_request
   sensors:
     meter_id:
       ignore: True
@@ -44,6 +51,7 @@ influxdb2:
 * **token** (Required, string): Token used when connecting to influxdb. Format: "Token abcdef=="
 * **bucket** (Required, string): Name of influxdb bucket.
 * **device** (Required, string): Name for this device.
+* **http_request_id** (Required, ID): ID of the http_request component to use for making HTTP requests. You must define an http_request component in your configuration.
 * **send_timeout** (Optional, time, default: "500ms"): Time to wait before sending UDP packets which have not been filled to max size.
 * **publish_all** (Optional, boolean, default: True): If true, publish updates from all sensors unless explicitly ignored in per sensor configuration. If false, only publish updates from sensors explicitly configured.
 * **tags** (Optional, mapping, default 'node: <esphome.name>'): Mapping of tag keys and values. 

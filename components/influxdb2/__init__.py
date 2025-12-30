@@ -43,7 +43,7 @@ SENSOR_SCHEMA = cv.Schema({
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(InfluxDBWriter),
-    cv.Optional(CONF_HTTP_REQUEST_ID): cv.use_id(HttpRequestComponent),
+    cv.Required(CONF_HTTP_REQUEST_ID): cv.use_id(HttpRequestComponent),
     cv.Required(CONF_HOST): cv.domain,
     cv.Optional(CONF_PORT, default=8086): cv.port,
     cv.Required(CONF_ORG_ID): cv.string_strict,
@@ -64,16 +64,8 @@ def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
 
-    # Get or create http_request component
-    if CONF_HTTP_REQUEST_ID in config:
-        http_request_var = yield cg.get_variable(config[CONF_HTTP_REQUEST_ID])
-    else:
-        # Create a default http_request component if not specified
-        from esphome.components import http_request
-        http_request_id = cg.ID('influxdb_http_request_default')
-        http_request_var = cg.new_Pvariable(http_request_id)
-        yield cg.register_component(http_request_var, config)
-    
+    # Get the http_request component
+    http_request_var = yield cg.get_variable(config[CONF_HTTP_REQUEST_ID])
     cg.add(var.set_http_request(http_request_var))
 
     cg.add(var.set_host(config[CONF_HOST]))
