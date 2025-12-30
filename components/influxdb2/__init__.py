@@ -11,6 +11,9 @@ influxdb_ns = cg.esphome_ns.namespace('influxdb')
 InfluxDBWriter = influxdb_ns.class_(
     'InfluxDBWriter', cg.Component, cg.Controller)
 
+http_request_ns = cg.esphome_ns.namespace('http_request')
+HttpRequestComponent = http_request_ns.class_('HttpRequestComponent', cg.Component)
+
 CONF_HOST = 'host'
 CONF_ORG_ID = 'orgid'
 CONF_TOKEN = 'token'
@@ -23,6 +26,7 @@ CONF_PUBLISH_ALL = 'publish_all'
 CONF_SENSORS = 'sensors'
 CONF_IGNORE = 'ignore'
 CONF_MEASUREMENT = 'measurement'
+CONF_HTTP_REQUEST_ID = 'http_request_id'
 
 
 SENSOR_SCHEMA = cv.Schema({
@@ -39,6 +43,7 @@ SENSOR_SCHEMA = cv.Schema({
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(InfluxDBWriter),
+    cv.Required(CONF_HTTP_REQUEST_ID): cv.use_id(HttpRequestComponent),
     cv.Required(CONF_HOST): cv.domain,
     cv.Optional(CONF_PORT, default=8086): cv.port,
     cv.Required(CONF_ORG_ID): cv.string_strict,
@@ -58,6 +63,10 @@ CONFIG_SCHEMA = cv.Schema({
 def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
+
+    # Get the http_request component
+    http_request_var = yield cg.get_variable(config[CONF_HTTP_REQUEST_ID])
+    cg.add(var.set_http_request(http_request_var))
 
     cg.add(var.set_host(config[CONF_HOST]))
     cg.add(var.set_port(config[CONF_PORT]))
