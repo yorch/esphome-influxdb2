@@ -3,6 +3,7 @@
 #include "esphome/core/log.h"
 #include <algorithm>
 #include <string>
+#include <set>
 
 #ifdef USE_LOGGER
 #include "esphome/components/logger/logger.h"
@@ -21,26 +22,18 @@ void InfluxDBWriter::setup() {
   this->service_url = "http://" + this->host + ":" + to_string(this->port) +
                       "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
 
-  this->request_ = new http_request::HttpRequestComponent();
-  this->request_->setup();
-
-  std::list<http_request::Header> headers;
+  // No need to create a new HttpRequestComponent - it's set via set_http_request()
+  // Just prepare the headers for later use
+  this->headers_.clear();
   http_request::Header header;
   header.name = "Content-Type";
   header.value = "text/plain";
-  headers.push_back(header);
+  this->headers_.push_back(header);
   if ((this->orgid.length() > 0) && (this->token.length() > 0)) {
     header.name = "Authorization";
     header.value = this->token.c_str();
-    headers.push_back(header);
+    this->headers_.push_back(header);
   }
-  this->request_->set_headers(headers);
-  this->request_->set_method("GET");
-  this->request_->set_useragent("ESPHome InfluxDB Bot");
-  this->request_->set_timeout(this->send_timeout);
-
-  // From now own all request are POST.
-  this->request_->set_method("POST");
 
   if (publish_all) {
 #ifdef USE_BINARY_SENSOR
@@ -82,18 +75,27 @@ void InfluxDBWriter::write(std::string measurement,
                            /* unused */ std::string tags,
                            const std::string value, std::string retention,
                            bool is_string) {
+  if (this->request_ == nullptr) {
+    ESP_LOGW(TAG, "HttpRequestComponent not set, cannot write to InfluxDB");
+    return;
+  }
+
   std::replace(measurement.begin(), measurement.end(), '-', '_');
   std::string line =
       measurement + ",device=" + this->device + " value=" + (is_string ? ("\"" + value + "\"") : value);
-  this->request_->set_url(
-      this->service_url +
-      (retention.empty() ? "" : "&rp=" + retention + "&precision=s"));
-  this->request_->set_body(line.c_str());
-  this->request_->send({});
+  
+  std::string url = this->service_url +
+      (retention.empty() ? "" : "&rp=" + retention + "&precision=s");
 
-  this->request_->close();
+  // Use the new perform() method with POST
+  std::set<std::string> collect_headers;
+  auto response = this->request_->perform(url, "POST", line, this->headers_, collect_headers);
 
   ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
+  
+  if (response) {
+    ESP_LOGD(TAG, "InfluxDB response status: %d", response->status_code);
+  }
 }
 
 void InfluxDBWriter::dump_config() {

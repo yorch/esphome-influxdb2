@@ -40,6 +40,9 @@ public:
   void set_bucket(std::string bucket) { this->bucket = bucket; };
   void set_send_timeout(int timeout) { send_timeout = timeout; };
   void set_device(std::string device) { this->device = device; };
+  void set_http_request(http_request::HttpRequestComponent *request) { 
+    this->request_ = request; 
+  };
 
   void set_tags(std::string tags) { this->tags = tags; };
   void set_publish_all(bool all) { publish_all = all; };
@@ -67,6 +70,7 @@ protected:
   std::vector<std::function<EntityBase *()>> setup_callbacks;
 
   http_request::HttpRequestComponent *request_;
+  std::list<http_request::Header> headers_;
 };
 
 } // namespace influxdb
