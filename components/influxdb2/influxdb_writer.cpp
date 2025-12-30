@@ -87,11 +87,10 @@ void InfluxDBWriter::write(std::string measurement,
   std::string url = this->service_url +
       (retention.empty() ? "" : "&rp=" + retention + "&precision=s");
 
-  // Use the new perform() method with POST
+  // Use the public post() method to send data to InfluxDB
   // collect_headers is required by the API but we don't need response headers for InfluxDB writes
-  std::string method = "POST";
   std::set<std::string> collect_headers;
-  auto response = this->request_->perform(url, method, line, this->headers_, collect_headers);
+  auto response = this->request_->post(url, line, this->headers_, collect_headers);
 
   ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
   
