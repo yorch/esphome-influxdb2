@@ -88,6 +88,7 @@ void InfluxDBWriter::write(std::string measurement,
       (retention.empty() ? "" : "&rp=" + retention + "&precision=s");
 
   // Use the new perform() method with POST
+  // collect_headers is required by the API but we don't need response headers for InfluxDB writes
   std::set<std::string> collect_headers;
   auto response = this->request_->perform(url, "POST", line, this->headers_, collect_headers);
 
